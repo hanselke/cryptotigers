@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.9;
-
 /*
    NFT Contract along the lines of CryptoPunks. For the original see:
    https://github.com/larvalabs/cryptopunks/blob/master/contracts/CryptoPunksMarket.sol
@@ -160,16 +159,27 @@ contract TigerBasicNFT {
         require(saleOffer.seller == getOwner(tigerId), "seller no longer owns");
         updateTigerOwnership(tigerId, msg.sender, saleOffer.seller);
         tigersForSale[tigerId] = SaleOffer(false, address(0), 0);
-        pendingWithdrawals[saleOffer.seller] += msg.value;
+
+
+
+        uint devShare = msg.value / 100;
+        uint artistShare = msg.value / 20;
+
+        uint sellerShare = msg.value - devShare - artistShare;
+
+        pendingWithdrawals[deployer] += devShare;
+        pendingWithdrawals[artist] += artistShare;
+        pendingWithdrawals[saleOffer.seller] += sellerShare;
         emit TigerSold(saleOffer.seller, msg.sender, tigerId, saleOffer.price);
     }
 
     // allow anyone to withdraw any pendingWithdrawals
-    function withdraw() external {
+    function withdrawFunds() external {
         require(pendingWithdrawals[msg.sender] > 0,"no pending withdrawals");
         uint256 amt = pendingWithdrawals[msg.sender];
         pendingWithdrawals[msg.sender] = 0;
         bool sent = payable(msg.sender).send(amt);
         require(sent,"failed send");
     }
+
 }

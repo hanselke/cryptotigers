@@ -30,8 +30,8 @@ export interface TigerBasicNFTInterface extends utils.Interface {
     "tigerByOwnerAndIndex(address,uint256)": FunctionFragment;
     "tigersForSale(uint256)": FunctionFragment;
     "totalSupply()": FunctionFragment;
-    "withdraw()": FunctionFragment;
     "withdrawFromSale(uint256)": FunctionFragment;
+    "withdrawFunds()": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -67,10 +67,13 @@ export interface TigerBasicNFTInterface extends utils.Interface {
     functionFragment: "totalSupply",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "withdraw", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "withdrawFromSale",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "withdrawFunds",
+    values?: undefined
   ): string;
 
   decodeFunctionResult(functionFragment: "buyTiger", data: BytesLike): Result;
@@ -97,9 +100,12 @@ export interface TigerBasicNFTInterface extends utils.Interface {
     functionFragment: "totalSupply",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "withdrawFromSale",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "withdrawFunds",
     data: BytesLike
   ): Result;
 
@@ -211,12 +217,12 @@ export interface TigerBasicNFT extends BaseContract {
 
     totalSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    withdraw(
+    withdrawFromSale(
+      tigerId: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    withdrawFromSale(
-      tigerId: BigNumberish,
+    withdrawFunds(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
@@ -265,12 +271,12 @@ export interface TigerBasicNFT extends BaseContract {
 
   totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
-  withdraw(
+  withdrawFromSale(
+    tigerId: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  withdrawFromSale(
-    tigerId: BigNumberish,
+  withdrawFunds(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -316,12 +322,12 @@ export interface TigerBasicNFT extends BaseContract {
 
     totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
-    withdraw(overrides?: CallOverrides): Promise<void>;
-
     withdrawFromSale(
       tigerId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    withdrawFunds(overrides?: CallOverrides): Promise<void>;
   };
 
   filters: {
@@ -401,12 +407,12 @@ export interface TigerBasicNFT extends BaseContract {
 
     totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
-    withdraw(
+    withdrawFromSale(
+      tigerId: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    withdrawFromSale(
-      tigerId: BigNumberish,
+    withdrawFunds(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
@@ -456,12 +462,12 @@ export interface TigerBasicNFT extends BaseContract {
 
     totalSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    withdraw(
+    withdrawFromSale(
+      tigerId: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    withdrawFromSale(
-      tigerId: BigNumberish,
+    withdrawFunds(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };

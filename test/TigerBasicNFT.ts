@@ -5,7 +5,7 @@ import { TigerBasicNFT } from "../typechain-types";
 
 describe("TigerBasicNFT contract", function () {
   let tiger: TigerBasicNFT;
-  let deployer;
+  let deployer: SignerWithAddress;
   let artist: SignerWithAddress;
   let alice: SignerWithAddress;
   let bob: SignerWithAddress;
@@ -127,50 +127,48 @@ describe("TigerBasicNFT contract", function () {
 
 
   it("cant withdraw when theres no pendingWithdrawal", async function () {
-    await expect(tiger.connect(alice).withdraw())
+    await expect(tiger.connect(alice).withdrawFunds())
     .to.be.revertedWith(
       "no pending withdrawals",
   );
   });
 
-  it("successfully buys, sells and withdraws ether", async function () {
-    let currentBalance = await alice.getBalance()
-    console.log("currentBalance",currentBalance)
+
+
+  it("seller artists and dev get their share", async function () {
     let forSale = await tiger.isForSale(0)
-    console.log("forSale",forSale)
-    expect(forSale[0]).to.be.equal(true)
-    expect(forSale[1]).to.be.equal("1000000000000000000")
-
+    console.log("START ----")
+    expect(await tiger.connect(artist).pendingWithdrawals(artist.address)).to.be.equal(0)
+    expect(await tiger.connect(deployer).pendingWithdrawals(deployer.address)).to.be.equal(0)
+    expect(await tiger.connect(alice).pendingWithdrawals(alice.address)).to.be.equal(0)
     await tiger.connect(alice).buyTiger(0, { value: forSale[1] });
-    expect(await tiger.connect(alice).getOwner(0)).to.equal(alice.address);
-    let afterBuyBalance = await alice.getBalance()
-    console.log("afterBuyBalance",afterBuyBalance)
 
-    let beforeSellPendingWithdraw = await tiger.connect(alice).pendingWithdrawals(alice.address)
-    console.log("beforeSellPendingWithdraw",beforeSellPendingWithdraw)
+
+    expect(await tiger.connect(artist).pendingWithdrawals(artist.address)).to.be.equal(ethers.utils.parseEther(".99") )
+    expect(await tiger.connect(deployer).pendingWithdrawals(deployer.address)).to.be.equal(ethers.utils.parseEther("0.01") )
+    expect(await tiger.connect(alice).pendingWithdrawals(alice.address)).to.be.equal(0)
+    await tiger.connect(artist).withdrawFunds()
+    await tiger.connect(deployer).withdrawFunds()
+
+    console.log("Withdraw funds from inital sale")
+
+
+
     await tiger.connect(alice).putUpForSale(0, ethers.utils.parseEther("10"));
     await tiger.connect(bob).buyTiger(0, { value: ethers.utils.parseEther("10") });
-
+    console.log("BUY TIGER -----")
     let afterSellPendingWithdraw = await tiger.connect(alice).pendingWithdrawals(alice.address)
-    console.log("afterSellPendingWithdraw",afterSellPendingWithdraw)
-    
-    expect(afterSellPendingWithdraw).to.be.equal( ethers.utils.parseEther("10"))
+    let artistPendingWithdraw = await tiger.connect(alice).pendingWithdrawals(artist.address)
+    let devPendingWithdraw = await tiger.connect(alice).pendingWithdrawals(deployer.address)
 
-    await tiger.connect(alice).withdraw()
-    let afterWithdrawPendingWithdraw  = await tiger.connect(alice).pendingWithdrawals(alice.address)
-    console.log("afterWithdrawPendingWithdraw",afterWithdrawPendingWithdraw)
-    expect(afterWithdrawPendingWithdraw).to.be.equal(0)
+    expect(afterSellPendingWithdraw).to.be.equal( "9400000000000000000")
+    expect(artistPendingWithdraw).to.be.equal( "500000000000000000")
+    expect(devPendingWithdraw).to.be.equal( "100000000000000000")
 
-    let afterWithdrawBalance = await alice.getBalance()
-    console.log("afterWithdrawBalance",afterWithdrawBalance)
-    expect(afterWithdrawBalance.sub(afterBuyBalance)).to.be.gt(0)
-    let howMuchReceived = afterWithdrawBalance.sub(afterBuyBalance)
-    console.log("howMuchReceived",howMuchReceived)
-    let diff = ethers.utils.parseEther("10").sub(howMuchReceived)
-    let numDiff = Math.abs(diff.toNumber())
-    console.log("numDiff",numDiff)
-    expect(numDiff).to.be.lt(100000000000000)
-
-
+    await tiger.connect(artist).withdrawFunds()
+    await tiger.connect(deployer).withdrawFunds()
+    await tiger.connect(alice).withdrawFunds()
+    expect(await tiger.connect(alice).pendingWithdrawals(artist.address)).to.be.equal(0)
+    expect(await tiger.connect(alice).pendingWithdrawals(deployer.address)).to.be.equal(0)
   });
 });
