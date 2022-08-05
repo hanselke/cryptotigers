@@ -124,4 +124,53 @@ describe("TigerBasicNFT contract", function () {
       "not for sale",
     );
   });
+
+
+  it("cant withdraw when theres no pendingWithdrawal", async function () {
+    await expect(tiger.connect(alice).withdraw())
+    .to.be.revertedWith(
+      "no pending withdrawals",
+  );
+  });
+
+  it("successfully buys, sells and withdraws ether", async function () {
+    let currentBalance = await alice.getBalance()
+    console.log("currentBalance",currentBalance)
+    let forSale = await tiger.isForSale(0)
+    console.log("forSale",forSale)
+    expect(forSale[0]).to.be.equal(true)
+    expect(forSale[1]).to.be.equal("1000000000000000000")
+
+    await tiger.connect(alice).buyTiger(0, { value: forSale[1] });
+    expect(await tiger.connect(alice).getOwner(0)).to.equal(alice.address);
+    let afterBuyBalance = await alice.getBalance()
+    console.log("afterBuyBalance",afterBuyBalance)
+
+    let beforeSellPendingWithdraw = await tiger.connect(alice).pendingWithdrawals(alice.address)
+    console.log("beforeSellPendingWithdraw",beforeSellPendingWithdraw)
+    await tiger.connect(alice).putUpForSale(0, ethers.utils.parseEther("10"));
+    await tiger.connect(bob).buyTiger(0, { value: ethers.utils.parseEther("10") });
+
+    let afterSellPendingWithdraw = await tiger.connect(alice).pendingWithdrawals(alice.address)
+    console.log("afterSellPendingWithdraw",afterSellPendingWithdraw)
+    
+    expect(afterSellPendingWithdraw).to.be.equal( ethers.utils.parseEther("10"))
+
+    await tiger.connect(alice).withdraw()
+    let afterWithdrawPendingWithdraw  = await tiger.connect(alice).pendingWithdrawals(alice.address)
+    console.log("afterWithdrawPendingWithdraw",afterWithdrawPendingWithdraw)
+    expect(afterWithdrawPendingWithdraw).to.be.equal(0)
+
+    let afterWithdrawBalance = await alice.getBalance()
+    console.log("afterWithdrawBalance",afterWithdrawBalance)
+    expect(afterWithdrawBalance.sub(afterBuyBalance)).to.be.gt(0)
+    let howMuchReceived = afterWithdrawBalance.sub(afterBuyBalance)
+    console.log("howMuchReceived",howMuchReceived)
+    let diff = ethers.utils.parseEther("10").sub(howMuchReceived)
+    let numDiff = Math.abs(diff.toNumber())
+    console.log("numDiff",numDiff)
+    expect(numDiff).to.be.lt(100000000000000)
+
+
+  });
 });

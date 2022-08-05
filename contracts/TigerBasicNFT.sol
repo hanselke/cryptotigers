@@ -163,4 +163,13 @@ contract TigerBasicNFT {
         pendingWithdrawals[saleOffer.seller] += msg.value;
         emit TigerSold(saleOffer.seller, msg.sender, tigerId, saleOffer.price);
     }
+
+    // allow anyone to withdraw any pendingWithdrawals
+    function withdraw() external {
+        require(pendingWithdrawals[msg.sender] > 0,"no pending withdrawals");
+        uint256 amt = pendingWithdrawals[msg.sender];
+        pendingWithdrawals[msg.sender] = 0;
+        bool sent = payable(msg.sender).send(amt);
+        require(sent,"failed send");
+    }
 }
